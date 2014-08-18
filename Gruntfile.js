@@ -7,13 +7,14 @@ module.exports = function(grunt){
 	  watch: {
 	  scripts: {
 	    files: ['test/**/*.js','lib/**/*.js'],
-	    tasks: ['nodeunit'],
+	    tasks: ['clear','nodeunit'],
 	    options: {
 	      debounceDelay: 250,
 	    },
 	  },
 	},
 	});
+	grunt.loadNpmTasks('grunt-clear');
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 };
