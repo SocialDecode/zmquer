@@ -12,7 +12,7 @@ var jobTest = {
 module.exports = {
     setUp: function (callback) {
 		if (!server.ready) {
-			server.initServer(require("../defaults.json"),function(){
+			server.initServer(require("../config/defaults.json"),function(){
 				callback();
 			});
 		} else {
