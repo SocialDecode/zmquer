@@ -4,10 +4,10 @@ var server = require('../lib/server')(),
 	config = require("../config/defaults-client.json");
 fs.exists("../config/client.json", function(exists) {
 	if (exists) config = require("../config/client.json");
+	server.listenJobs({
+		'uri' : 'tcp://'+config.servername+':'+config.serverport,
+		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1)
+	});
+	console.log("Waiting for Jobs");
 });
 
-server.listenJobs({
-	'uri' : 'tcp://'+config.servername+':'+config.serverport,
-	'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1)
-});
-console.log("Waiting for Jobs");
