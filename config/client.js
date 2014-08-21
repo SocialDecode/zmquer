@@ -1,8 +1,13 @@
 var server = require('../lib/server')();
-var servername = process.argv[2] || "localhost";
-var serverport = parseInt(process.argv[3] || 3000,10);
+var server = require('../lib/server')(),
+	fs = require('fs'),
+	config = require("../config/defaults-client.json");
+fs.exists("../config/client.json", function(exists) {
+	if (exists) config = require("../config/client.json");
+});
+
 server.listenJobs({
-	'uri' : 'tcp://'+servername+':'+serverport,
-	'uriret' : 'tcp://'+servername+':'+(serverport+1)
+	'uri' : 'tcp://'+config.servername+':'+config.serverport,
+	'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1)
 });
 console.log("Waiting for Jobs");
