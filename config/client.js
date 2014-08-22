@@ -8,6 +8,6 @@ fs.exists("../config/client.json", function(exists) {
 		'uri' : 'tcp://'+config.servername+':'+config.serverport,
 		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1)
 	});
-	console.log("Waiting for Jobs");
+	console.log("Waiting for Jobs ...", config);
 });
 
