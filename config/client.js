@@ -1,4 +1,3 @@
-var server = require('../lib/server')();
 var server = require('../lib/server')(),
 	fs = require('fs'),
 	config = require("../config/defaults-client.json");
