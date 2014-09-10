@@ -1,7 +1,7 @@
 {
   "name": "zmquer",
   "description": "Command distribution across servers using 0mq and MongoDB",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main" : "lib/server.js",
   "dependencies": {
     "zmq": "^2.7.0",
