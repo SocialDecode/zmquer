@@ -1,4 +1,5 @@
 {
 	"servername":"localhost",
-	"serverport" : 3000
+	"serverport" : 3000,
+	"basepath" : ""
 }
