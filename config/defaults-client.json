@@ -1,5 +1,6 @@
 {
 	"servername":"localhost",
 	"serverport" : 3000,
-	"basepath" : ""
+	"basepath" : "",
+	"max" : 2 
 }

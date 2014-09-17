@@ -6,7 +6,8 @@ fs.exists("../config/client.json", function(exists) {
 	server.listenJobs({
 		'uri' : 'tcp://'+config.servername+':'+config.serverport,
 		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1),
-		'basepath' : config.basepath
+		'basepath' : config.basepath,
+		'max' : config.max/*Mex Number of simultaneous jobs*/
 	});
 	console.log("Waiting for Jobs ...", config);
 });
