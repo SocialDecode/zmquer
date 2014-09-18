@@ -10,10 +10,11 @@ Process distribution platform for ques using 0mq
 - Command line Tools are needed : https://developer.apple.com/downloads/index.action?name=for%20Xcode%20-
 - zeromq is needed
 ```
+  brew install pkg-config
 	brew install --devel zeromq
-	brew link zeromq
+	brew link zeromq (only if link fails)
 ```
-- If linking does not work FIX your permissions for brew to link :
+- If linking still does not work FIX your permissions for brew to link :
 
 ```
 	sudo chown -R $USER /usr/local/include
