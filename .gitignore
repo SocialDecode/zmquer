@@ -27,3 +27,6 @@ node_modules
 config/client.json
 config/server.json
 config/users.htpasswd
+
+Vagrantfile
+prepare_vagrant.sh
