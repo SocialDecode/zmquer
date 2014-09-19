@@ -31,4 +31,10 @@ Process distribution platform for ques using 0mq
 declared on `config/defaults-server.json` or, if exists, `config/server.json`.  
 
 A `config/users.htpasswd.sample` is provided and can be renamed to start using it.  
-The default username is **admin** and password is **admin**
+There are two default users on the sample file: 
+    
+    username: admin
+  password: admin (hashed)
+  
+  username: otherAdmin
+  password: password
