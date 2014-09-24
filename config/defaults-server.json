@@ -7,5 +7,6 @@
 		"port" : 2999,
 		"authFile" : "users"
 	},
-	"maxQueSize" : 100
+	"maxQueSize" : 100,
+	"minMem" : 30
 }
