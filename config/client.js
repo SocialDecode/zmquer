@@ -4,7 +4,7 @@ var server = require('../lib/server')(),
 fs.exists("../config/client.json", function(exists) {
 	var config = {};
 	if (exists) {
-		config = require("../config/server.json");
+		config = require("../config/client.json");
 		//extend with defaults
 		for (var option in defaults){
 			if (!config[option]) config[option] = defaults[option];
