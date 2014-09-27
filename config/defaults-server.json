@@ -8,5 +8,5 @@
 		"authFile" : "users"
 	},
 	"maxQueSize" : 100,
-	"minMem" : 30
+	"minMem" : 100
 }
