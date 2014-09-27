@@ -8,5 +8,6 @@
 		"authFile" : "users"
 	},
 	"maxQueSize" : 100,
+	"dbIncremental" : 20,
 	"minMem" : 100
 }
