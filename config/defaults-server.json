@@ -9,5 +9,5 @@
 	},
 	"maxQueSize" : 100,
 	"dbIncremental" : 20,
-	"minMem" : 100
+	"minMem" : 300
 }

@@ -2,6 +2,5 @@
 	"servername":"localhost",
 	"serverport" : 3000,
 	"basepath" : "",
-	"max" : 2,
-	"minMem" : 30
+	"minMem" : 300
 }

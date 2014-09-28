@@ -16,7 +16,6 @@ fs.exists("../config/client.json", function(exists) {
 		'uri' : 'tcp://'+config.servername+':'+config.serverport,
 		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1),
 		'basepath' : config.basepath,
-		'max' : config.max,/*Mex Number of simultaneous jobs*/
 		'minMem' : config.minMem/*Minmum free memory to process jobs*/
 	});
 	console.log("Waiting for Jobs ...", config);
