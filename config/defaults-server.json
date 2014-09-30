@@ -6,7 +6,6 @@
 		"server" : "http://localhost:5984",
 		"database" : "localhost-que"
 	},
-	"db" : {"_prefix":"localhost"},
 	"dumpSuccess" : false,
 	"httpServer" : {
 		"port" : 2999,
