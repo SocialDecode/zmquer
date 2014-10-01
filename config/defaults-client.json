@@ -2,5 +2,6 @@
 	"servername":"localhost",
 	"serverport" : 3000,
 	"basepath" : "",
-	"minMem" : 300
+	"minMem" : 300,
+	"jsonpack" : false
 }

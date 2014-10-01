@@ -13,5 +13,6 @@
 	},
 	"maxQueSize" : 100,
 	"dbIncremental" : 20,
-	"minMem" : 300
+	"minMem" : 300,
+	"jsonpack" : false
 }
