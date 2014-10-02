@@ -15,5 +15,5 @@
 	"dbIncremental" : 20,
 	"minMem" : 300,
 	"jsonpack" : false,
-	"retries" : 3,
+	"retries" : 3
 }
