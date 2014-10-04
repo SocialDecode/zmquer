@@ -17,7 +17,8 @@ fs.exists("../config/client.json", function(exists) {
 		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1),
 		'basepath' : config.basepath,
 		'minMem' : config.minMem,/*Minmum free memory to process jobs*/
-		'jsonpack' : config.jsonpack
+		'jsonpack' : config.jsonpack,
+		'memJob' : config.memJob /*Minimum amount available per Job*/
 	});
 	console.log("Waiting for Jobs ...", config);
 });

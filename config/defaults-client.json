@@ -3,5 +3,6 @@
 	"serverport" : 3000,
 	"basepath" : "",
 	"minMem" : 300,
-	"jsonpack" : false
+	"jsonpack" : false,
+	"memJob" : 50
 }
