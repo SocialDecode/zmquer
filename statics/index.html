@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZMQuer Job Status</title>
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+</head>
+<body>
+  <h1>ZMQuer Job Status</h1>
+  <div class="holder">
+    <div class="working"></div>
+    <div class="errors"></div>
+    <div class="totals"></div>
+    <div class="bubble"></div>
+    <div class="status">
+      <ul>
+        <li class="liErrors"><span></span> Errors</li>
+        <li class="liWorking"><span></span> Working</li>
+        <li class="liPending"><span></span> Pending</li>
+        <li class="liTotals"><span></span> Total Jobs</li>
+      </ul>
+    </div>
+  </div>
+  <div class="desynchronized">
+    <div class="alert">
+      <b>Server Desynchronized!</b>
+      <a class="syncServer" href="javascript:;">Click to synchronize with server</a>
+    </div>
+  </div>
+  <div class="resetBtn">Requeue Errors</div>
+  <script>
+    var timeout = false;
+    var _getStatus = function(){
+      $.get('/status',function(data){
+        $('.liErrors span').html(data.withErr);
+        $('.liWorking span').html(data.executing);
+        $('.liPending span').html(data.pending);
+        $('.liTotals span').html(data.total);
+        var errPer = (data.withErr*100)/data.total;
+        var worPer = (data.executing*100)/data.total + errPer;
+        $('.errors').css({width:errPer+'%'});
+        $('.working').css({width:worPer+'%'});
+
+      }).fail(function(data){
+        $('.desynchronized').show();
+        $('.resetBtn').hide();
+      }).done(function(){
+        $('.desynchronized').hide();
+        $('.resetBtn').show();
+        timeout = setTimeout(function(){
+          clearTimeout(timeout);
+          _getStatus();
+        },1000);
+      });
+    };
+    $('.resetBtn').click(function(){
+      $.post('/resetJobs');
+    });
+    $('.syncServer').click(function(){
+      _getStatus();
+    });
+    _getStatus();
+  </script>
+  <style>
+    body{
+      font-family:Arial;
+    }
+    .desynchronized{
+      margin-top:20px;
+    }
+    a{
+      color: inherit;
+    }
+    .alert{
+      background-color:#F7D9D9;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .resetBtn{
+      margin-top:20px;
+      background-color: #ccc;
+      padding: 10px;
+      text-align: center;
+      border-radius:4px;
+      cursor:pointer;
+    }
+    .holder{
+      width: 100%;
+      height: 200px;
+      background-color:#5d5d5d;
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .errors{
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width:0%;
+      background-color:#964747;
+    }
+    .working{
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width:0%;
+      background-color:#6eb056;
+    }
+    .errors, .working{
+      -webkit-transition: width 1s;
+    }
+    .totals{
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 10px;
+      width:100%;
+      background-color:#599cc7;
+    }
+    .bubble{
+      position: absolute;
+      top: -100%;
+      left: -100%;
+      height: 190%;
+      width: 199%;
+      border-radius:50%;
+      background-color:#fff;
+    }
+    .status{
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+    ul, ul li{
+      list-style:none;
+    }
+    ul li{
+      position: relative;
+      font-size: 15px;
+      line-height: 30px;
+    }
+    ul li:before{
+      position: absolute;
+      top: 5px;
+      left: -25px;
+      content: ' ';
+      width: 20px;
+      height: 20px;
+    }
+    .liErrors:before{
+      background-color:#964747;
+    }
+    .liWorking:before{
+      background-color:#6eb056;
+    }
+    .liPending:before{
+      background-color:#5d5d5d;
+    }
+    .liTotals:before{
+      background-color:#599cc7;
+    }
+  </style>
+</body>
+</html>
