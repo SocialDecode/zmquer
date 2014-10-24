@@ -3,6 +3,8 @@
 <head>
   <title>ZMQuer Job Status</title>
   <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.4.0/jquery.timeago.min.js"></script>
+  
 </head>
 <body>
   <h1>ZMQuer Job Status</h1>
@@ -28,11 +30,37 @@
   </div>
   <div class="resetBtn">Requeue Errors</div>
   <br/>
+  <section id="serverlist">
+
+  </section>  
+  <br/>
   <a href="/logout">[Logout]</a>
   <script>
     var timeout = false;
     var _getStatus = function(){
       $.get('/status',function(data){
+        var holder = $("#serverlist"),
+            now = ~~(new Date().getTime()/1000);
+        holder.html('');
+        var cuantos = 0;
+        for (var nombre in data.servers){
+          var min = now;
+          for (var id in data.servers[nombre]){
+            cuantos++;
+            if (data.servers[nombre][id] < min){
+              min = data.servers[nombre][id];
+            }            
+          }
+          var boton = $('<div/>',{
+            style : "border:1px solid;display:inline-block;padding:5px;cursor:pointer;",
+            onClick : "goReset('"+nombre+"')"
+          }).text(JSON.stringify({
+            nombre : nombre,
+            last : jQuery.timeago((min==now) ? 0 : min),
+            jobs : cuantos
+          }));
+          holder.append(boton);
+        }
         $('.liErrors span').html(data.withErr);
         $('.liWorking span').html(data.executing);
         $('.liPending span').html(data.pending);
@@ -60,6 +88,9 @@
     $('.syncServer').click(function(){
       _getStatus();
     });
+    var goReset = function(cual){
+      $.post('/resetServer',{"cual":cual});
+    }
     _getStatus();
   </script>
   <style>
