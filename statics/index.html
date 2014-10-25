@@ -44,6 +44,7 @@
         holder.html('');
         var cuantos = 0;
         for (var nombre in data.servers){
+          cuantos = 0;
           var min = now;
           for (var id in data.servers[nombre]){
             cuantos++;
