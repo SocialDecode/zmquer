@@ -56,7 +56,7 @@
             onClick : "goReset('"+nombre+"')"
           }).text(JSON.stringify({
             nombre : nombre,
-            last : jQuery.timeago((min==now) ? 0 : min),
+            last : jQuery.timeago((min<now) ? min*1000 : 0),
             jobs : cuantos
           }));
           holder.append(boton);
