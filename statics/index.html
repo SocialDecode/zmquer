@@ -48,7 +48,6 @@
           for (var id in data.servers[nombre]){
             if (id !== "lastseen") cuantos++;          
           }
-          console.log(JSON.stringify(data.servers[nombre]),cuantos);
           if (!data.servers[nombre].lastseen) data.servers[nombre].lastseen = 0;
           var boton = $('<div/>',{
             style : "border:1px solid;display:inline-block;padding:5px;cursor:pointer;",
