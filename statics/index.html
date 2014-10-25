@@ -36,6 +36,9 @@
   <br/>
   <a href="/logout">[Logout]</a>
   <script>
+    var numberWithCommas = function(x){
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
     var timeout = false;
     var _getStatus = function(){
       $.get('/status',function(data){
@@ -59,10 +62,10 @@
           }));
           holder.append(boton);
         }
-        $('.liErrors span').html(data.withErr);
-        $('.liWorking span').html(data.executing);
-        $('.liPending span').html(data.pending);
-        $('.liTotals span').html(data.total);
+        $('.liErrors span').html(numberWithCommas(data.withErr));
+        $('.liWorking span').html(numberWithCommas(data.executing));
+        $('.liPending span').html(numberWithCommas(data.pending));
+        $('.liTotals span').html(numberWithCommas(data.total));
         var errPer = (data.withErr*100)/data.total;
         var worPer = (data.executing*100)/data.total + errPer;
         $('.errors').css({width:errPer+'%'});
