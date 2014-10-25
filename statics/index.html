@@ -45,19 +45,17 @@
         var cuantos = 0;
         for (var nombre in data.servers){
           cuantos = 0;
-          var min = now;
           for (var id in data.servers[nombre]){
-            cuantos++;
-            if (data.servers[nombre][id] < min){
-              min = data.servers[nombre][id];
-            }            
+            if (id !== "lastseen") cuantos++;          
           }
+          console.log(JSON.stringify(data.servers[nombre]),cuantos);
+          if (!data.servers[nombre].lastseen) data.servers[nombre].lastseen = 0;
           var boton = $('<div/>',{
             style : "border:1px solid;display:inline-block;padding:5px;cursor:pointer;",
             onClick : "goReset('"+nombre+"')"
           }).text(JSON.stringify({
             nombre : nombre,
-            last : jQuery.timeago((min<now) ? min*1000 : 0),
+            last : jQuery.timeago(data.servers[nombre].lastseen*1000),
             jobs : cuantos
           }));
           holder.append(boton);
