@@ -3,6 +3,7 @@ config = require '../config/defaults-server.json'
 processing = {}
 
 universe = [0]
+servers = {}
 
 callback = {}
 callback.resetJobs = ()->
@@ -14,7 +15,8 @@ callback.resetJobs = ()->
   httpserver.syncData()
 
 callback.syncData = (cb)->
-  cb({processing:processing,universe:universe})
+  cb({processing:processing,universe:universe,servers:servers})
+  
 
 httpserver.startHttp {
   cfg:config
@@ -24,7 +26,15 @@ httpserver.startHttp {
 i = 1
 int = setInterval( ()->
 
-  processing[i] = (i%3)+1
+  processing[i] = ~~(Math.random()*3)+1
+
+  for k in [1..14]
+    servers['dummy'+k+'.socialdecode.com'] = {}
+    server = servers['dummy'+k+'.socialdecode.com']
+    server.lastseen = ~~(new Date().getTime()/1000)
+    for j in [1..~~(Math.random()*10)+2]
+      server[i] = ~~(new Date().getTime()/1000)
+
   i++
 
   #This is not how actually the universe of jobs is obtained
@@ -37,4 +47,4 @@ int = setInterval( ()->
     resume.withErr++ if v is 3
   resume.pending = resume.total - (resume.executing+resume.withErr)
   #console.log resume
-,3000)
+,1000)
