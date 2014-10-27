@@ -16,5 +16,7 @@
 	"minMem" : 300,
 	"jsonpack" : false,
 	"retries" : 3,
-	"errorlog" : "/var/log/zmquer_err.log"
+	"errorlog" : "/var/log/zmquer_err.log",
+	"delBatchsize" : 100,
+	"readBatchsize" : 100
 }
