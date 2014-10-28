@@ -18,5 +18,6 @@
 	"retries" : 3,
 	"errorlog" : "/var/log/zmquer_err.log",
 	"delBatchsize" : 100,
-	"readBatchsize" : 100
+	"readBatchsize" : 100,
+	"readKeySize" : 100
 }
