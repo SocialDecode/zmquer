@@ -23,7 +23,7 @@
   <a href="/logout">[Logout]</a>
   <script>
     var numberWithCommas = function(x){
-      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      if (x) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); else return "";
     };
     var totalJobs = 0;
     var xAxis ={
@@ -39,6 +39,11 @@
     var exeObj = {
       name : 'Working',
       data : [],
+      color: '#FF9900'
+    };
+    var compObj = {
+      name : 'Completed',
+      data : [],
       color: '#6eb056'
     };
     var penObj = {
@@ -47,6 +52,7 @@
       color: '#5d5d5d'
     };
     series.push(errObj);
+    series.push(compObj);
     series.push(exeObj);
     series.push(penObj);
     var chartData = {
@@ -122,12 +128,15 @@
         errObj.name = numberWithCommas(data.withErr) + ' Errors';
         exeObj.data.push(data.executing);
         exeObj.name = numberWithCommas(data.executing) + ' Working';
+        compObj.data.push(data.completed);
+        compObj.name = numberWithCommas(data.completed) + ' Completed';
         penObj.data.push(data.pending);
         penObj.name = numberWithCommas(data.pending) + ' Pending';
 
         xAxis.categories = xAxis.categories.slice(-60);
         errObj.data = errObj.data.slice(-60);
         exeObj.data = exeObj.data.slice(-60);
+        compObj.data = compObj.data.slice(-60);
         penObj.data = penObj.data.slice(-60);
 
         $('#container').highcharts(chartData);
