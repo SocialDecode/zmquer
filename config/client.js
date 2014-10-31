@@ -12,14 +12,9 @@ fs.exists("../config/client.json", function(exists) {
 	}else{
 		config = defaults;
 	}
-	server.listenJobs({
-		'uri' : 'tcp://'+config.servername+':'+config.serverport,
-		'uriret' : 'tcp://'+config.servername+':'+(config.serverport+1),
-		'basepath' : config.basepath,
-		'minMem' : config.minMem,/*Minmum free memory to process jobs*/
-		'jsonpack' : config.jsonpack,
-		'memJob' : config.memJob /*Minimum amount available per Job*/
-	});
+	config.uri = 'tcp://'+config.servername+':'+config.serverport;
+	config.uriret = 'tcp://'+config.servername+':'+(config.serverport+1);
+	server.listenJobs(config);
 	console.log("Waiting for Jobs ...", config);
 });
 
