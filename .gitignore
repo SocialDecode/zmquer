@@ -31,3 +31,5 @@ config/users.htpasswd
 Vagrantfile
 prepare_vagrant.sh
 .vagrant/
+
+.idea
