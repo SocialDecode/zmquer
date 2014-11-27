@@ -23,7 +23,7 @@
   <a href="/logout">[Logout]</a>
   <script>
     var numberWithCommas = function(x){
-      if (x) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); else return "";
+      if (x) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); else return "0";
     };
     var totalJobs = 0;
     var xAxis ={
