@@ -5,17 +5,21 @@ processing = {}
 universe = [0]
 servers = {}
 
+couch_errors = {}
+ref_errors = [0]
+
 callback = {}
 callback.resetJobs = ()->
-  cleanedProc = {}
-  for k, v of processing
-    cleanedProc[k] = v if v isnt 3
-  processing = cleanedProc
-  cleanedProc = null
+  couch_errors = {}
   httpserver.syncData()
 
 callback.syncData = (cb)->
-  cb({processing:processing,universe:universe,servers:servers})
+  cb({
+    processing : processing,
+    universe : universe,
+    servers : servers,
+    errors : ref_errors
+  })
   
 
 httpserver.startHttp {
@@ -41,10 +45,9 @@ int = setInterval( ()->
   #But it serves for testing purposes
   universe[0] = Object.keys(processing).length
 
-  resume = {total:universe[0],pending:0,executing:0,withErr:0}
   for k, v of processing
-    resume.executing++ if v is 2
-    resume.withErr++ if v is 3
-  resume.pending = resume.total - (resume.executing+resume.withErr)
-  #console.log resume
+    couch_errors[new Date().getTime()] = true if v is 3
+
+  ref_errors[0] = Object.keys(couch_errors).length
+  
 ,1000)
