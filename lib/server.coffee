@@ -444,7 +444,7 @@ main = ->
 							callback()
 						else
 							for item in bulkbody.rows
-								if item?.doc?
+								if item?.doc?.exec?
 									doc = item.doc
 									doc._status = "tosend"
 									doc._lastchange = ~~((new Date).getTime() / 1000)
