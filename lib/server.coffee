@@ -432,7 +432,7 @@ main = ->
 										workque[index] = doc
 									else
 										#it was a gosth job
-										console.log "updating info for ghost job", doc._id, workque[index]
+										console.log "updating info for ghost job", doc._id
 										doc._status = workque[index]._status
 										doc._takenby = workque[index]._takenby if workque[index]._takenby?
 										doc._retries = workque[index]._retries if workque[index]._retries?
