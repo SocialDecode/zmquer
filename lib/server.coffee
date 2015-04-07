@@ -56,9 +56,9 @@ main = ->
 			maxquelen = 1000
 			jumpon = 0
 			findinque = (id)->
-				for obj in workque
+				for obj,ix in workque
 					if obj._id is id
-						return obj
+						return workque[ix]
 				return false
 			findplace = (id)->
 				found = -1
