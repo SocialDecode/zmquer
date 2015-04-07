@@ -459,9 +459,11 @@ main = ->
 							found = true if item is jobId
 						if not found
 							if findplace(jobId) isnt -1 # update the job
-								console.log "updating a ghost job",jobId,"for", host
-								findinque(jobId)._status = "working"
-								findinque(jobId)._lastchange = ~~((new Date).getTime() / 1000)
+								currentjob = findinque(jobId)
+								console.log "re-assign",jobId,currentjob._takenby, "->",host
+								currentjob._takenby = host
+								currentjob._status = "working"
+								currentjob._lastchange = ~~((new Date).getTime() / 1000)
 							else # create a ghosth job
 								console.log "creating ghost job",jobId,"for", host
 								workque.push {
