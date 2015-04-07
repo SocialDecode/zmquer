@@ -1,4 +1,5 @@
-var server = require('../lib/server')(),
+require('coffee-script/register');
+var server = require('../lib/server.coffee')(),
 	fs = require('fs'),
 	defaults = require("../config/defaults-client.json");
 fs.exists("../config/client.json", function(exists) {
