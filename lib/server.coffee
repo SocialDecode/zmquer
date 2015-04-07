@@ -392,7 +392,7 @@ main = ->
 								jobsCounter[0] = getbody.total_rows
 								if getbody.rows and getbody.rows.length > 0
 									for act in getbody.rows
-										if !findinque(act.id)
+										if findplace(act.id) is -1
 											act._status = "new"
 											act._lastchange =  ~~((new Date).getTime() / 1000)
 											workque.push act
