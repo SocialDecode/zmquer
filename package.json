@@ -15,7 +15,8 @@
     "jsonpack": "^1.1.2",
     "nano": "^4.2.1",
     "async": "^0.9.0",
-    "node-statsd": "^0.1.1"
+    "node-statsd": "^0.1.1",
+    "coffee-script": "^1.9.1"
   },
   "contributors": [
     {
