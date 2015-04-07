@@ -7,6 +7,7 @@
 #testing for non-daemon monde
 canprogress = true
 refreshrate = 500
+zmqWorking = 3
 try
 	process.stdout.clearLine()
 catch err
@@ -65,6 +66,7 @@ main = ->
 					if obj.id is id or obj._id is id
 						found = i
 				return found
+			dirtyqueue = 0
 			async.forever((next)->
 				unless r.ready
 					setImmediate -> next()
@@ -72,7 +74,6 @@ main = ->
 					jumpon++
 					status_c = {}
 					tokill = []
-					dirtyqueue = false
 					for act in workque
 						switch act._status
 							when "new"
@@ -82,7 +83,7 @@ main = ->
 							when "tosend"
 								act._status = "onqueue"
 								act._lastchange = ~~((new Date).getTime() / 1000)
-								dirtyqueue = true
+								dirtyqueue = ~~((new Date).getTime() / 1000)
 								s_wk.send if config.jsonpack then jsonpack.pack(bulkbody.rows[i].doc) else JSON.stringify(act)
 							when "completed"
 								act._status = "todrop"
@@ -93,11 +94,11 @@ main = ->
 							when "droperr"
 								act._status = "tofetch"
 								act._lastchange = ~~((new Date).getTime() / 1000)
-							when "onqueue"
-								if s_wk._zmq.pending  is 0
-									# the que lost all elements .. zmq bug
-									act._status = "tosend"
-									act._lastchange = ~~((new Date).getTime() / 1000)
+							# when "onqueue"
+							# 	if s_wk._zmq.pending  is 0
+							# 		# the que lost all elements .. zmq bug
+							# 		act._status = "tosend"
+							# 		act._lastchange = ~~((new Date).getTime() / 1000)
 							when "errored"
 								if act.exec?
 									act._status = "tosend"
@@ -121,7 +122,7 @@ main = ->
 						#console.log output.join(" | "), output.length,".--"
 						#process.stdout.clearLine()
 						output.push "zmq : " + s_wk._zmq.pending
-						output.push "mem : " + (if os.freemem() < config.minMem * 1048576 then "Ok" else "notOk")
+						output.push "mem : " + (if os.freemem() < (config.minMem * 1048576) then "Ok" else "notOk")
 						if canprogress
 							process.stdout.cursorTo(60)
 							process.stdout.write output.join(" | ")
@@ -132,7 +133,7 @@ main = ->
 					
 					# Inconsistency checks for zmq queue
 
-					if !dirtyqueue and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
+					if ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
 						console.log "Inconsistent Queue", status_c.onqueue, s_wk._zmq.pending
 						zmqids = []
 						for item,ix in s_wk._outgoing
@@ -155,14 +156,15 @@ main = ->
 								return false if todelete.indexOf(ix) isnt -1
 								return true
 						# on Que but not on zmq
-						for item in workque when item._status = "onqueue"
-							found = false
-							for zItem in zmqids when zItem[0] is item._id
-								found = true
-							if !found
-								console.log "requeueing",item._id
-								item._status = "tosend"
-								item._lastchange = ~~((new Date).getTime() / 1000)
+						for item in workque
+							if item._status is "onqueue"
+								found = false
+								for zItem in zmqids
+									found = true if zItem[0] is item._id
+								if !found
+									console.log "requeueing",item._id
+									item._status = "tosend"
+									item._lastchange = ~~((new Date).getTime() / 1000)
 					setImmediate -> next()
 			,(err)->
 				#it will never stop
