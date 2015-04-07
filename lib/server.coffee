@@ -57,13 +57,13 @@ main = ->
 			jumpon = 0
 			findinque = (id)->
 				for obj in workque
-					if obj.id is id or obj._id is id
+					if obj._id is id
 						return obj
 				return false
 			findplace = (id)->
 				found = -1
 				for obj,i in workque
-					if obj.id is id or obj._id is id
+					if obj._id is id
 						found = i
 				return found
 			dirtyqueue = 0
@@ -79,7 +79,7 @@ main = ->
 							when "new"
 								act._status = "tofetch"
 								act._lastchange = ~~((new Date).getTime() / 1000)
-								getDocsCargo.push act.id
+								getDocsCargo.push act._id
 							when "tosend"
 								act._status = "onqueue"
 								act._lastchange = ~~((new Date).getTime() / 1000)
@@ -244,16 +244,17 @@ main = ->
 							hostJobs[c.node.name].lastseen = ~~((new Date).getTime() / 1000)
 						syncJobs c.node.name, c.jobIds
 						datalog.gauge 'task_processing', c.jobIds.length, [ 'worker:' + c.node.name ] if c.jobIds? and Array.isArray(c.jobIds)
-					if c.id
+					if c.id and findinque(c.id)?
+						jobItem = findinque(c.id)
 						switch c.status
 							when 2 # job taken
-								findinque(c.id)?._status = "working"
-								findinque(c.id)?._takenby = c.node.name if c.node?.name?
-								findinque(c.id)?._lastchange = ~~((new Date).getTime() / 1000)
+								jobItem._status = "working"
+								jobItem._takenby = c.node.name if c.node?.name?
+								jobItem._lastchange = ~~((new Date).getTime() / 1000)
 							when 3 # job finished
 								if c.error
 									# error on the job
-									jobItem = findinque(c.id)
+									
 									if jobItem._status is "working" and jobItem._takenby is c.node.name
 										jobItem._status = "errored"
 										jobItem._lastchange = ~~((new Date).getTime() / 1000)
@@ -270,8 +271,8 @@ main = ->
 											return
 								else
 									# ok done
-									findinque(c.id)?._status = "completed"
-									findinque(c.id)?._lastchange = ~~((new Date).getTime() / 1000)
+									jobItem._status = "completed"
+									jobItem._lastchange = ~~((new Date).getTime() / 1000)
 									datalog.legauge 'task_completed', c.node.name
 					else
 						if c.startup
@@ -392,7 +393,9 @@ main = ->
 								jobsCounter[0] = getbody.total_rows
 								if getbody.rows and getbody.rows.length > 0
 									for act in getbody.rows
-										if findplace(act.id) is -1
+										act._id = act.id # make job compilant
+										delete act.id
+										if findplace(act._id) is -1
 											act._status = "new"
 											act._lastchange =  ~~((new Date).getTime() / 1000)
 											workque.push act
@@ -550,7 +553,6 @@ main = ->
 						s_wc.send JSON.stringify(
 							id: c._id
 							status: 2
-							idtype: c.idtype
 							node:
 								name: os.hostname()
 								loadavg: os.loadavg()
@@ -570,7 +572,6 @@ main = ->
 				s_wc.send JSON.stringify(
 					id: c._id
 					status: 2
-					idtype: c.idtype
 					node:
 						name: os.hostname()
 						loadavg: os.loadavg()
@@ -630,7 +631,6 @@ main = ->
 					#sending back the status
 					s_wc.send JSON.stringify(
 						id: c._id
-						idtype: c.idtype
 						stdout: stdout
 						error: error
 						status: 3
