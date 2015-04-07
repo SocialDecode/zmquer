@@ -7,7 +7,7 @@
 #testing for non-daemon monde
 canprogress = true
 refreshrate = 500
-zmqWorking = 3
+zmqWorking = 10
 try
 	process.stdout.clearLine()
 catch err
