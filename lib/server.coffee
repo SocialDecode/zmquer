@@ -156,15 +156,17 @@ main = ->
 								return false if todelete.indexOf(ix) isnt -1
 								return true
 						# on Que but not on zmq
+						reenques = 0
 						for item in workque
 							if item._status is "onqueue"
 								found = false
 								for zItem in zmqids
 									found = true if zItem[0] is item._id
 								if !found
-									console.log "requeueing",item._id
+									reenques++
 									item._status = "tosend"
 									item._lastchange = ~~((new Date).getTime() / 1000)
+						console.log "Reenqued", reenques,"jobs"
 					setImmediate -> next()
 			,(err)->
 				#it will never stop
