@@ -478,7 +478,7 @@ main = ->
 						found = false
 						for job in jobs
 							found = true if item is job[0] 
-						if !found # re-enqueu the job if not a ghost
+						if !found and item?# re-enqueu the job if not a ghost
 							console.log "un-assign an assigned job", item, "to",host
 							if findinque(item)?.exec?
 								findinque(item)._status = "tosend"
