@@ -64,6 +64,7 @@ main = ->
 					return i if obj._id is id
 				return -1
 			dirtyqueue = 0
+			forceQueuereSync = false
 			async.forever((next)->
 				unless r.ready
 					setImmediate -> next()
@@ -130,8 +131,8 @@ main = ->
 					
 					# Inconsistency checks for zmq queue
 
-					if ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
-						console.log "Inconsistent Queue", status_c.onqueue, s_wk._zmq.pending
+					if forceQueuereSync or ( ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending )
+						console.log "Inconsistent Queue", status_c.onqueue, s_wk._zmq.pending, "forced", forceQueuereSync
 						zmqids = []
 						for item,ix in s_wk._outgoing
 							lid = JSON.parse(item[0].toString('utf-8'))._id
@@ -164,6 +165,7 @@ main = ->
 									item._status = "tosend"
 									item._lastchange = ~~((new Date).getTime() / 1000)
 						console.log "Reenqued", reenques,"jobs"
+						forceQueuereSync = false
 					setImmediate -> next()
 			,(err)->
 				#it will never stop
@@ -479,7 +481,8 @@ main = ->
 						if not found
 							if findplace(jobId) isnt -1 # update the job
 								currentjob = findinque(jobId)
-								console.log "re-assign",jobId,currentjob._takenby, "->",host
+								console.log jobId,currentjob._takenby, "->",host
+								if currentjob._status is "onqueue" then forceQueuereSync = true
 								currentjob._takenby = host
 								currentjob._status = "working"
 								currentjob._lastchange = ~~((new Date).getTime() / 1000)
