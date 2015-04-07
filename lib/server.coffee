@@ -121,6 +121,7 @@ main = ->
 						#console.log output.join(" | "), output.length,".--"
 						#process.stdout.clearLine()
 						output.push "zmq : " + s_wk._zmq.pending
+						output.push "mem : " + (if os.freemem() < config.minMem * 1048576 then "Ok" else "notOk")
 						if canprogress
 							process.stdout.cursorTo(60)
 							process.stdout.write output.join(" | ")
@@ -129,23 +130,39 @@ main = ->
 							console.log output.join(" | ")
 						jumpon = 0
 					
-					# TODO :. Inconsistency checks for zmq queue
+					# Inconsistency checks for zmq queue
 
-					# if !dirtyqueue and status_c.onqueue? and status_c.onqueue > s_wk._zmq.pending
-					# 	tosend = []
-					# 	for job in workque when job._status is "onqueue"
-					# 		found = false
-					# 		for item in s_wk._outgoing
-					# 			lid = JSON.parse(item[0].toString('utf-8'))._id
-					# 			found = true if job._id is lid
-					# 		tosend.push job._id if !found
-					# 	if tosend.length > 0
-					# 		console.log "Inconsistent ZMQ buffer, fixing:",tosend.length,"que:",status_c.onqueue, "zmw:", s_wk._outgoing.length
-					# 		for job in workque when job._status is "onqueue"
-					# 			if tosend.indexOf(job._id) isnt -1
-					# 				job._status = "tosend"
-					# 				job._lastchange = ~~((new Date).getTime() / 1000)
-
+					if !dirtyqueue and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
+						console.log "Inconsistent Queue", status_c.onqueue, s_wk._zmq.pending
+						zmqids = []
+						for item,ix in s_wk._outgoing
+							lid = JSON.parse(item[0].toString('utf-8'))._id
+							zmqids.push([lid,ix])
+						# On zmq but not on que
+						notonque = []
+						for item in zmqids
+							notonque.push(item[1]) if findinque(item[0])._status isnt "onqueue" # not on que
+						# Duplicates
+						dups = []
+						for item,ix in zmqids
+							for inItem,inIx in zmqids
+								dups.push(item[1]) if ix isnt inIx and item[0] is inItem[1] # duplicates
+						console.log "NotOnQue", notonque.length, "Dups",dups.length
+						todelete = notonque.concat(dups)
+						if todelete.length isnt 0
+							console.log "Removing", todelete.length,"items from zmqQueue", todelete
+							s_wk._outgoing = s_wk._outgoing.filter (obj,ix)->
+								return false if todelete.indexOf(ix) isnt -1
+								return true
+						# on Que but not on zmq
+						for item in workque when item._status = "onqueue"
+							found = false
+							for zItem in zmqids when zItem[0] is item._id
+								found = true
+							if !found
+								console.log "requeueing",item._id
+								item._status = "tosend"
+								item._lastchange = ~~((new Date).getTime() / 1000)
 					setImmediate -> next()
 			,(err)->
 				#it will never stop
@@ -222,7 +239,7 @@ main = ->
 						else
 							hostJobs[c.node.name].lastseen = ~~((new Date).getTime() / 1000)
 						syncJobs c.node.name, c.jobIds
-						datalog.gauge 'task_processing', Object.keys(hostJobs[c.node.name]).length, [ 'worker:' + c.node.name ]
+						datalog.gauge 'task_processing', c.jobIds.length, [ 'worker:' + c.node.name ] if c.jobIds? and Array.isArray(c.jobIds)
 					if c.id
 						switch c.status
 							when 2 # job taken
@@ -232,9 +249,11 @@ main = ->
 							when 3 # job finished
 								if c.error
 									# error on the job
-									findinque(c.id)?._status = "errored"
-									findinque(c.id)?._lastchange = ~~((new Date).getTime() / 1000)
-									findinque(c.id)?.error = c.error
+									jobItem = findinque(c.id)
+									if jobItem._status is "working" and jobItem._takenby is c.node.name
+										jobItem._status = "errored"
+										jobItem._lastchange = ~~((new Date).getTime() / 1000)
+										jobItem.error = c.error
 									console.log ':(', (if c.node then c.node.name else '?'), c.id, c.error.message
 									datalog.legauge 'task_error', c.node.name
 									if config.errorlog isnt false #error log
