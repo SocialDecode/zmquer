@@ -57,15 +57,12 @@ main = ->
 			jumpon = 0
 			findinque = (id)->
 				for obj,ix in workque
-					if obj._id is id
-						return workque[ix]
+					return workque[ix] if obj._id is id
 				return false
 			findplace = (id)->
-				found = -1
 				for obj,i in workque
-					if obj._id is id
-						found = i
-				return found
+					return i if obj._id is id
+				return -1
 			dirtyqueue = 0
 			async.forever((next)->
 				unless r.ready
@@ -242,15 +239,11 @@ main = ->
 							hostJobs[c.node.name] = lastseen: ~~((new Date).getTime() / 1000)
 						else
 							hostJobs[c.node.name].lastseen = ~~((new Date).getTime() / 1000)
-						syncJobs c.node.name, c.jobIds
+						syncJobs c.node.name, c.jobIds if c.jobIds?
 						datalog.gauge 'task_processing', c.jobIds.length, [ 'worker:' + c.node.name ] if c.jobIds? and Array.isArray(c.jobIds)
 					if c.id and findinque(c.id)?
 						jobItem = findinque(c.id)
 						switch c.status
-							when 2 # job taken
-								jobItem._status = "working"
-								jobItem._takenby = c.node.name if c.node?.name?
-								jobItem._lastchange = ~~((new Date).getTime() / 1000)
 							when 3 # job finished
 								if c.error
 									# error on the job
@@ -282,8 +275,8 @@ main = ->
 								if act._status is "working" and act._takenby is c.startup
 									act._status = "tosend"
 									act._lastchange = ~~((new Date).getTime() / 1000)
-						else
-							console.log 'Not sure what to do with ', c
+						#else
+							#console.log 'Not sure what to do with ', c
 					#datalog.gauge 'task_errors', Object.keys(couch_errors).length
 					return
 				r.ready = true
@@ -533,6 +526,10 @@ main = ->
 			if r.listening
 				return
 			jobs = []
+			jobIndex = (id)->
+				for item,ix in jobs
+					return ix if item[0] is id
+				return -1
 			s_wk_client = zmq.socket('pull')
 			#socket Work Que Client;
 			#setup the work returns
@@ -546,13 +543,11 @@ main = ->
 				#one more job
 				c = if options.jsonpack then jsonpack.unpack(String(msg)) else JSON.parse(msg)
 				args = ''
-				if !c.exec or jobs.indexOf(c._id) > -1
+				if !c.exec? or jobIndex(c._id) > -1
 					#tell mothership we already had this ..
-					if jobs.indexOf(c._id) > -1
+					if jobIndex(c._id) isnt -1
 						console.log 'already had ', c._id, ' :|'
 						s_wc.send JSON.stringify(
-							id: c._id
-							status: 2
 							node:
 								name: os.hostname()
 								loadavg: os.loadavg()
@@ -570,8 +565,6 @@ main = ->
 				console.log 'got job ', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
 				#sent back teh status job
 				s_wc.send JSON.stringify(
-					id: c._id
-					status: 2
 					node:
 						name: os.hostname()
 						loadavg: os.loadavg()
@@ -639,7 +632,6 @@ main = ->
 							loadavg: os.loadavg()
 							freemem: os.freemem()
 							totamem: os.totalmem()
-							jobs: String(jobs.length - 1)
 						file: file_ret
 						_rev: c._rev
 						jobIds: jobs)
