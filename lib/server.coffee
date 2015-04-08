@@ -259,7 +259,6 @@ main = ->
 							when 3 # job finished
 								if c.error
 									# error on the job
-									
 									if jobItem._status is "working" and jobItem._takenby is c.node.name
 										jobItem._status = "errored"
 										jobItem._lastchange = ~~((new Date).getTime() / 1000)
@@ -279,7 +278,7 @@ main = ->
 									jobItem._status = "completed"
 									jobItem._lastchange = ~~((new Date).getTime() / 1000)
 									datalog.legauge 'task_completed', c.node.name
-									datalog.gauge 'task_exectime', c.timeTaken, [ 'exec:' +  (jobItem.exec.split("/").pop()).split(" ")[0]] if c.timeTaken?
+									datalog.gauge 'task_exectime', c.timeTaken, [ 'exec:' +  (jobItem.exec.split("/").pop()).split(" ")[0]] if c.timeTaken? and jobItem.exec?
 					else
 						if c.startup
 							console.log 'Server Reconnected ... ', c.startup
