@@ -6,13 +6,13 @@
 ###
 #testing for non-daemon monde
 canprogress = true
-refreshrate = 500
+refreshrate = 1
 zmqWorking = 10
 try
 	process.stdout.clearLine()
 catch err
 	canprogress = false
-	refreshrate = 5000
+	refreshrate = 5
 
 main = ->
 	col = {}
@@ -102,10 +102,10 @@ main = ->
 								item._lastchange = ~~((new Date).getTime() / 1000)
 					console.log "Reenqued", reenques,"jobs" if reenques > 0
 					workingSync = false
-			async.forever((next)->
-				unless r.ready
-					setImmediate -> next()
-				else
+			updatingStatus = false
+			updateStatus = ->
+				if r.ready and !updatingStatus
+					updatingStatus = true
 					jumpon++
 					status_c = {}
 					tokill = []
@@ -176,10 +176,8 @@ main = ->
 					if ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
 						console.log "Resync of Queue", status_c.onqueue, s_wk._zmq.pending
 						resyncQueue()
-					setImmediate -> next()
-			,(err)->
-				#it will never stop
-			)
+					updatingStatus = false
+			statusTimer = setInterval updateStatus, 500
 			datalog = 
 				gauge: ->
 				legauge: ->
@@ -561,116 +559,111 @@ main = ->
 			s_wc.send JSON.stringify(
 				startup: os.hostname()
 				jobsIds: jobs)
-
+			heathOk = ->
+				return os.freemem() - options.memJob * 1048576 * jobs.length > options.minMem * 1048576 and os.loadavg()[0] < options.maxLoad
 			on_message = (msg) ->
-				updateState()
-				#one more job
-				c = if options.jsonpack then jsonpack.unpack(String(msg)) else JSON.parse(msg)
-				args = ''
-				if !c.exec? or jobIndex(c._id) > -1
-					#tell mothership we already had this ..
-					if jobIndex(c._id) isnt -1
-						console.log 'already had ', c._id, ' :|'
+				#updateState()
+				#pingServer()
+				if heathOk()
+					#one more job
+					c = if options.jsonpack then jsonpack.unpack(String(msg)) else JSON.parse(msg)
+					args = ''
+					if !c.exec? or jobIndex(c._id) > -1
+						#tell mothership we already had this ..
+						if jobIndex(c._id) isnt -1
+							console.log 'already had ', c._id, ' :|'
+							s_wc.send JSON.stringify(
+								node:
+									name: os.hostname()
+									loadavg: os.loadavg()
+									freemem: os.freemem()
+									totamem: os.totalmem()
+								jobIds: jobs)
+						return
+					jobs.push [c._id,c._rev]
+					env = process.env
+					env.jobId = c._id
+					if !env.TMPDIR
+						env.TMPDIR = '/var/tmp/'
+					fs = require('fs')
+					filePath = env.TMPDIR + c._id + '.json'
+					console.log 'got job ', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
+					for arg of c.args
+						args += ' ' + arg + ' ' + c.args[arg]
+					# preparing the command
+					cmdpath = if options.basepath then options.basepath + '/' else ''
+					cmdfin = ''
+					execpaths = [
+						'.js'
+						'.coffee'
+					]
+					first = true
+					c.exec.split(' ').forEach (el) ->
+						add = false
+						if !first
+							execpaths.forEach (ec) ->
+								if el.length > ec.length and el.substr(el.length - ec.length) == ec
+									add = true
+								return
+						if add and !first
+							cmdfin += ' ' + cmdpath + el
+						else
+							if first
+								cmdfin += el
+							else
+								cmdfin += ' ' + el
+						first = false
+						return
+					cmd = cmdpath + cmdfin + args
+					#create a file for the arguments in env
+					if c.env
+						fs.writeFileSync filePath, JSON.stringify(c.env), 'utf-8'
+					path = cmd.split('/')
+					path.pop()
+					path = path.join('/')
+					env.PATH += ':' + path
+					cmd = cmd.split(' ')
+					cmd1 = cmd.shift()
+					started = ~~((new Date).getTime() / 1000)
+					#separating command from arguments
+					require('child_process').execFile cmd1, cmd, {
+						cwd: path
+						env: env
+					}, (error, stdout, stderr) ->
+						if c.env and fs.existsSync(filePath)
+							fs.unlinkSync filePath
+						#erasing input file
+						if stdout
+							console.log 'stdout', cmd, stdout
+						if error
+							console.log 'error', c._id, cmd1, cmd, error
+						#check if there is a file output
+						file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
+						#sending back the status
 						s_wc.send JSON.stringify(
+							id: c._id
+							stdout: stdout
+							error: error
+							status: 3
+							timeTaken: ~~((new Date).getTime() / 1000) - started
 							node:
 								name: os.hostname()
 								loadavg: os.loadavg()
 								freemem: os.freemem()
 								totamem: os.totalmem()
+							file: file_ret
+							_rev: c._rev
 							jobIds: jobs)
-					return
-				jobs.push [c._id,c._rev]
-				env = process.env
-				env.jobId = c._id
-				if !env.TMPDIR
-					env.TMPDIR = '/var/tmp/'
-				fs = require('fs')
-				filePath = env.TMPDIR + c._id + '.json'
-				console.log 'got job ', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
-				#sent back teh status job
-				s_wc.send JSON.stringify(
-					node:
-						name: os.hostname()
-						loadavg: os.loadavg()
-						freemem: os.freemem()
-						totamem: os.totalmem()
-					jobIds: jobs)
-				for arg of c.args
-					args += ' ' + arg + ' ' + c.args[arg]
-				# preparing the command
-				cmdpath = if options.basepath then options.basepath + '/' else ''
-				cmdfin = ''
-				execpaths = [
-					'.js'
-					'.coffee'
-				]
-				first = true
-				c.exec.split(' ').forEach (el) ->
-					add = false
-					if !first
-						execpaths.forEach (ec) ->
-							if el.length > ec.length and el.substr(el.length - ec.length) == ec
-								add = true
-							return
-					if add and !first
-						cmdfin += ' ' + cmdpath + el
-					else
-						if first
-							cmdfin += el
-						else
-							cmdfin += ' ' + el
-					first = false
-					return
-				cmd = cmdpath + cmdfin + args
-				#create a file for the arguments in env
-				if c.env
-					fs.writeFileSync filePath, JSON.stringify(c.env), 'utf-8'
-				path = cmd.split('/')
-				path.pop()
-				path = path.join('/')
-				env.PATH += ':' + path
-				cmd = cmd.split(' ')
-				cmd1 = cmd.shift()
-				started = ~~((new Date).getTime() / 1000)
-				#separating command from arguments
-				require('child_process').execFile cmd1, cmd, {
-					cwd: path
-					env: env
-				}, (error, stdout, stderr) ->
-					if c.env and fs.existsSync(filePath)
-						fs.unlinkSync filePath
-					#erasing input file
-					if stdout
-						console.log 'stdout', cmd, stdout
-					if error
-						console.log 'error', c._id, cmd1, cmd, error
-					#check if there is a file output
-					file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
-					#sending back the status
-					s_wc.send JSON.stringify(
-						id: c._id
-						stdout: stdout
-						error: error
-						status: 3
-						timeTaken: ~~((new Date).getTime() / 1000) - started
-						node:
-							name: os.hostname()
-							loadavg: os.loadavg()
-							freemem: os.freemem()
-							totamem: os.totalmem()
-						file: file_ret
-						_rev: c._rev
-						jobIds: jobs)
-					#one less job
-					jobs = jobs.filter (obj)->
-						return true if obj[0] isnt c._id
-					console.log 'job done', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
-					if error and error.code == 'Unknown system errno 7' and options.err7 # unrecoverable error..
-						#unrecoverable error
-						console.log 'Unrecoverable error 7'
-						process.exit 1
-					updateState()
-					return
+						#one less job
+						jobs = jobs.filter (obj)->
+							return true if obj[0] isnt c._id
+						console.log 'job done', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
+						if error and error.code == 'Unknown system errno 7' and options.err7 # unrecoverable error..
+							#unrecoverable error
+							console.log 'Unrecoverable error 7'
+							process.exit 1
+						updateState()
+						return
 				return
 
 			#timed restart of job processing
@@ -684,13 +677,13 @@ main = ->
 					#console.log(s_wk_client._zmq.state,jobs.length,options.max,freemem);
 					switch s_wk_client._zmq.state
 						when zmq.STATE_CLOSED
-							if os.freemem() - options.memJob * 1048576 * jobs.length > options.minMem * 1048576
+							if heathOk()
 								console.log 'connecting...'
 								s_wk_client = zmq.socket('pull')
 								s_wk_client.on 'message', on_message
 								s_wk_client.connect options.uri
 						when zmq.STATE_READY
-							if os.freemem() - options.memJob * 1048576 * jobs.length < options.minMem * 1048576
+							unless heathOk()
 								console.log 'disconnecting...'
 								s_wk_client.close()
 								s_wk_client = '_zmq': 'state': zmq.STATE_CLOSED
@@ -701,6 +694,20 @@ main = ->
 			s_wk_client.on 'message', on_message
 			s_wk_client.connect options.uri
 			setInterval updateState, 1000
+			#sent back MotherShip
+			pingin = false
+			pingServer = ->
+				if !pingin
+					pingin = true
+					s_wc.send JSON.stringify(
+						node:
+							name: os.hostname()
+							loadavg: os.loadavg()
+							freemem: os.freemem()
+							totamem: os.totalmem()
+						jobIds: jobs)
+					pingin = false
+			setInterval pingServer, 2000
 			r.listening = true
 			return
 		'monitorJob': (jobId) ->
