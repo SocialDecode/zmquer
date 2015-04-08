@@ -279,7 +279,7 @@ main = ->
 									jobItem._status = "completed"
 									jobItem._lastchange = ~~((new Date).getTime() / 1000)
 									datalog.legauge 'task_completed', c.node.name
-									datalog.legauge 'task_exectime', c.timeTaken, [ 'exec:' +  (jobItem.exec.split("/").pop()).split(" ")[0]] if c.timeTaken?
+									datalog.gauge 'task_exectime', c.timeTaken, [ 'exec:' +  (jobItem.exec.split("/").pop()).split(" ")[0]] if c.timeTaken?
 					else
 						if c.startup
 							console.log 'Server Reconnected ... ', c.startup
