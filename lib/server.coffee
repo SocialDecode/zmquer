@@ -491,7 +491,7 @@ main = ->
 									currentjob._otherhost ||= {}
 									currentjob._otherhost[host] = true
 								else
-									console.log jobId,currentjob._takenby, "->",host
+									console.log jobId,currentjob._takenby, "->",host if currentjob._takenby?
 									if currentjob._status is "onqueue" then forceQueuereSync = true
 									currentjob._takenby = host
 									currentjob._status = "working"
@@ -500,6 +500,7 @@ main = ->
 							else # create a ghosth job
 								console.log "creating ghost job",jobId,"for", host
 								workque.push {
+									_takenby : host,
 									_id : jobId,
 									_rev : jobRv,
 									_status : "working",
