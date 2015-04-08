@@ -482,6 +482,7 @@ main = ->
 					assigned.push(item._id) for item in workque when item._status is "working" and item._takenby is host
 
 					# Working job but not assigned 
+					sendsync = false
 					for job in jobs
 						jobId = job[0]
 						jobRv = job[1]
@@ -500,7 +501,7 @@ main = ->
 										console.log jobId,currentjob._takenby, "->",host
 										currentjob._otherhost ||= {}
 										currentjob._otherhost[currentjob._takenby] = true
-									if currentjob._status is "onqueue" then resyncQueue()
+									if currentjob._status is "onqueue" then sendsync = true
 									currentjob._takenby = host
 									currentjob._status = "working"
 									currentjob._lastchange = ~~((new Date).getTime() / 1000)
@@ -529,7 +530,7 @@ main = ->
 							else # kill the ghost job
 								workque = workque.filter (obj)->
 									return obj._id isnt item
-
+					resyncQueue() if sendsync
 				return
 			return r
 		'addJob': (command, callback) ->
