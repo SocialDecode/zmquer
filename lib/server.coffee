@@ -486,7 +486,7 @@ main = ->
 						if not found
 							if findplace(jobId) isnt -1 # update the job
 								currentjob = findinque(jobId)
-								if currentjob.status is "working" and currentjob._takenby isnt host and  (~~((new Date).getTime() / 1000) - currentjob._lastchange) < 300
+								if currentjob.status is "working" and (~~((new Date).getTime() / 1000) - currentjob._lastchange) < 300
 									# dont re-assign if it is working on another that has reported it was taken in the last 5 minutes
 									currentjob._otherhost ||= {}
 									currentjob._otherhost[host] = true
@@ -497,7 +497,6 @@ main = ->
 									currentjob._status = "working"
 									currentjob._lastchange = ~~((new Date).getTime() / 1000)
 									delete currentjob._otherhost?[host]
-
 							else # create a ghosth job
 								console.log "creating ghost job",jobId,"for", host
 								workque.push {
