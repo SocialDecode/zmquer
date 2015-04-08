@@ -89,14 +89,14 @@ main = ->
 						s_wk._outgoing = s_wk._outgoing.filter (obj,ix)->
 							return false if todelete.indexOf(ix) isnt -1
 							return true
-					# on Que but not on zmq
+					# on Que but not on ZMQ
 					reenques = 0
 					for item in workque
 						if item._status is "onqueue"
 							found = false
 							for zItem in zmqids
 								found = true if zItem[0] is item._id
-							if !found
+							if !found and (~~((new Date).getTime() / 1000) - item._lastchange) > zmqWorking # allow the sub to reply
 								reenques++
 								item._status = "tosend"
 								item._lastchange = ~~((new Date).getTime() / 1000)
