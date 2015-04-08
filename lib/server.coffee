@@ -496,7 +496,10 @@ main = ->
 									currentjob._otherhost ||= {}
 									currentjob._otherhost[host] = true
 								else
-									console.log jobId,currentjob._takenby, "->",host if currentjob._takenby?
+									if currentjob._takenby? and currentjob._status is "working"
+										console.log jobId,currentjob._takenby, "->",host
+										currentjob._otherhost ||= {}
+										currentjob._otherhost[currentjob._takenby] = true
 									if currentjob._status is "onqueue" then resyncQueue()
 									currentjob._takenby = host
 									currentjob._status = "working"
