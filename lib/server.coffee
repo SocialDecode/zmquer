@@ -627,6 +627,7 @@ main = ->
 				env.PATH += ':' + path
 				cmd = cmd.split(' ')
 				cmd1 = cmd.shift()
+				started = ~~((new Date).getTime() / 1000)
 				#separating command from arguments
 				require('child_process').execFile cmd1, cmd, {
 					cwd: path
@@ -640,7 +641,6 @@ main = ->
 					if error
 						console.log 'error', c._id, cmd1, cmd, error
 					#check if there is a file output
-					started = ~~((new Date).getTime() / 1000)
 					file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
 					#sending back the status
 					s_wc.send JSON.stringify(
@@ -661,16 +661,7 @@ main = ->
 					jobs = jobs.filter (obj)->
 						return true if obj[0] isnt c._id
 					console.log 'job done', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
-
-					###*
-
-						TODO:
-						- This Error Catch is for an error that is not recoverable
-
-					*
-					###
-
-					if error and error.code == 'Unknown system errno 7' and options.err7
+					if error and error.code == 'Unknown system errno 7' and options.err7 # unrecoverable error..
 						#unrecoverable error
 						console.log 'Unrecoverable error 7'
 						process.exit 1
