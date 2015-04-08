@@ -64,7 +64,44 @@ main = ->
 					return i if obj._id is id
 				return -1
 			dirtyqueue = 0
-			forceQueuereSync = false
+			workingSync = false
+			resyncQueue = ()->
+				if workingSync
+					return
+				else
+					workingSync = true
+					zmqids = []
+					for item,ix in s_wk._outgoing
+						lid = JSON.parse(item[0].toString('utf-8'))._id
+						zmqids.push([lid,ix])
+					# On zmq but not on que
+					notonque = []
+					for item in zmqids
+						notonque.push(item[1]) if findinque(item[0])._status isnt "onqueue" # not on que
+					# Duplicates
+					dups = []
+					for item,ix in zmqids
+						for inItem,inIx in zmqids
+							dups.push(item[1]) if ix isnt inIx and item[0] is inItem[1] # duplicates
+					todelete = notonque.concat(dups)
+					if todelete.length isnt 0
+						console.log "NotOnQue", notonque.length, "Dups",dups.length,"Removing", todelete.length,"items from zmqQueue", todelete
+						s_wk._outgoing = s_wk._outgoing.filter (obj,ix)->
+							return false if todelete.indexOf(ix) isnt -1
+							return true
+					# on Que but not on zmq
+					reenques = 0
+					for item in workque
+						if item._status is "onqueue"
+							found = false
+							for zItem in zmqids
+								found = true if zItem[0] is item._id
+							if !found
+								reenques++
+								item._status = "tosend"
+								item._lastchange = ~~((new Date).getTime() / 1000)
+					console.log "Reenqued", reenques,"jobs" if reenques > 0
+					workingSync = false
 			async.forever((next)->
 				unless r.ready
 					setImmediate -> next()
@@ -75,7 +112,7 @@ main = ->
 					for act in workque
 						switch act._status
 							when "new"
-								act._status = "tofetch"
+								act._status = "fetching"
 								act._lastchange = ~~((new Date).getTime() / 1000)
 								getDocsCargo.push act._id
 							when "tosend"
@@ -90,7 +127,7 @@ main = ->
 							when "dropped"
 								tokill.push act._id
 							when "droperr"
-								act._status = "tofetch"
+								act._status = "new"
 								act._lastchange = ~~((new Date).getTime() / 1000)
 							# when "onqueue"
 							# 	if s_wk._zmq.pending  is 0
@@ -125,7 +162,7 @@ main = ->
 						#console.log output.join(" | "), output.length,".--"
 						#process.stdout.clearLine()
 						output.push "zmq : " + s_wk._zmq.pending
-						output.push "mem : " + (if os.freemem() < (config.minMem * 1048576) then "Ok" else "notOk")
+						output.push "mem : " + (if os.freemem() > (config.minMem * 1048576) then "Ok" else "notOk")
 						if canprogress
 							process.stdout.cursorTo(60)
 							process.stdout.write output.join(" | ")
@@ -136,41 +173,9 @@ main = ->
 					
 					# Inconsistency checks for zmq queue
 
-					if forceQueuereSync or ( ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending )
-						console.log "Inconsistent Queue", status_c.onqueue, s_wk._zmq.pending, "forced", forceQueuereSync
-						zmqids = []
-						for item,ix in s_wk._outgoing
-							lid = JSON.parse(item[0].toString('utf-8'))._id
-							zmqids.push([lid,ix])
-						# On zmq but not on que
-						notonque = []
-						for item in zmqids
-							notonque.push(item[1]) if findinque(item[0])._status isnt "onqueue" # not on que
-						# Duplicates
-						dups = []
-						for item,ix in zmqids
-							for inItem,inIx in zmqids
-								dups.push(item[1]) if ix isnt inIx and item[0] is inItem[1] # duplicates
-						console.log "NotOnQue", notonque.length, "Dups",dups.length
-						todelete = notonque.concat(dups)
-						if todelete.length isnt 0
-							console.log "Removing", todelete.length,"items from zmqQueue", todelete
-							s_wk._outgoing = s_wk._outgoing.filter (obj,ix)->
-								return false if todelete.indexOf(ix) isnt -1
-								return true
-						# on Que but not on zmq
-						reenques = 0
-						for item in workque
-							if item._status is "onqueue"
-								found = false
-								for zItem in zmqids
-									found = true if zItem[0] is item._id
-								if !found
-									reenques++
-									item._status = "tosend"
-									item._lastchange = ~~((new Date).getTime() / 1000)
-						console.log "Reenqued", reenques,"jobs"
-						forceQueuereSync = false
+					if ((~~((new Date).getTime() / 1000)) - dirtyqueue > zmqWorking) and status_c.onqueue? and status_c.onqueue isnt s_wk._zmq.pending
+						console.log "Resync of Queue", status_c.onqueue, s_wk._zmq.pending
+						resyncQueue()
 					setImmediate -> next()
 			,(err)->
 				#it will never stop
@@ -454,7 +459,7 @@ main = ->
 									doc._status = "tosend"
 									doc._lastchange = ~~((new Date).getTime() / 1000)
 									index = findplace(doc._id)
-									if workque[index]._status is "tofetch"
+									if workque[index]._status is "fetching"
 										workque[index] = doc
 									else
 										#it was a gosth job
@@ -492,7 +497,7 @@ main = ->
 									currentjob._otherhost[host] = true
 								else
 									console.log jobId,currentjob._takenby, "->",host if currentjob._takenby?
-									if currentjob._status is "onqueue" then forceQueuereSync = true
+									if currentjob._status is "onqueue" then resyncQueue()
 									currentjob._takenby = host
 									currentjob._status = "working"
 									currentjob._lastchange = ~~((new Date).getTime() / 1000)
