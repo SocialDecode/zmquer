@@ -279,6 +279,7 @@ main = ->
 									jobItem._status = "completed"
 									jobItem._lastchange = ~~((new Date).getTime() / 1000)
 									datalog.legauge 'task_completed', c.node.name
+									datalog.legauge 'task_exectime', c.timeTaken, [ 'exec:' +  (jobItem.exec.split("/").pop()).split(" ")[0]] if c.timeTaken?
 					else
 						if c.startup
 							console.log 'Server Reconnected ... ', c.startup
@@ -640,6 +641,7 @@ main = ->
 					if error
 						console.log 'error', c._id, cmd1, cmd, error
 					#check if there is a file output
+					started = ~~((new Date).getTime() / 1000)
 					file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
 					#sending back the status
 					s_wc.send JSON.stringify(
@@ -647,6 +649,7 @@ main = ->
 						stdout: stdout
 						error: error
 						status: 3
+						timeTaken: ~~((new Date).getTime() / 1000) - started
 						node:
 							name: os.hostname()
 							loadavg: os.loadavg()
