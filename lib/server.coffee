@@ -106,6 +106,11 @@ main = ->
 								else
 									#it was a ghost job
 									tokill.push act._id
+							when "working"
+								if act._otherhost?
+									status_c["duplicates"] ||= 0
+									status_c["duplicates"] += Object.keys(act._otherhost).length
+
 						status_c[act._status] ||= 0
 						status_c[act._status]++
 					if tokill.length > 0
@@ -481,11 +486,18 @@ main = ->
 						if not found
 							if findplace(jobId) isnt -1 # update the job
 								currentjob = findinque(jobId)
-								console.log jobId,currentjob._takenby, "->",host
-								if currentjob._status is "onqueue" then forceQueuereSync = true
-								currentjob._takenby = host
-								currentjob._status = "working"
-								currentjob._lastchange = ~~((new Date).getTime() / 1000)
+								if currentjob.status is "working" and currentjob._takenby isnt host and  (~~((new Date).getTime() / 1000) - currentjob._lastchange) < 300
+									# dont re-assign if it is working on another that has reported it was taken in the last 5 minutes
+									currentjob._otherhost ||= {}
+									currentjob._otherhost[host] = true
+								else
+									console.log jobId,currentjob._takenby, "->",host
+									if currentjob._status is "onqueue" then forceQueuereSync = true
+									currentjob._takenby = host
+									currentjob._status = "working"
+									currentjob._lastchange = ~~((new Date).getTime() / 1000)
+									delete currentjob._otherhost?[host]
+
 							else # create a ghosth job
 								console.log "creating ghost job",jobId,"for", host
 								workque.push {
