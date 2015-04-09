@@ -639,45 +639,44 @@ main = ->
 					cmd1 = cmd.shift()
 					started = ~~((new Date).getTime() / 1000)
 					#separating command from arguments
-					setImmediate ->
-						require('child_process').execFile cmd1, cmd, {
-							cwd: path
-							env: env
-						}, (error, stdout, stderr) ->
-							if c.env and fs.existsSync(filePath)
-								fs.unlinkSync filePath
-							#erasing input file
-							if stdout
-								console.log 'stdout', cmd, stdout
-							if error
-								console.log 'error', c._id, cmd1, cmd, error
-							#check if there is a file output
-							file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
-							#sending back the status
-							s_wc.send JSON.stringify(
-								id: c._id
-								stdout: stdout
-								error: error
-								status: 3
-								timeTaken: ~~((new Date).getTime() / 1000) - started
-								node:
-									name: os.hostname()
-									loadavg: os.loadavg()
-									freemem: os.freemem()
-									totamem: os.totalmem()
-								file: file_ret
-								_rev: c._rev
-								jobIds: jobs)
-							#one less job
-							jobs = jobs.filter (obj)->
-								return true if obj[0] isnt c._id
-							console.log 'job done', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
-							if error and error.code == 'Unknown system errno 7' and options.err7 # unrecoverable error..
-								#unrecoverable error
-								console.log 'Unrecoverable error 7'
-								process.exit 1
-							updateState()
-							return
+					require('child_process').execFile cmd1, cmd, {
+						cwd: path
+						env: env
+					}, (error, stdout, stderr) ->
+						if c.env and fs.existsSync(filePath)
+							fs.unlinkSync filePath
+						#erasing input file
+						if stdout
+							console.log 'stdout', cmd, stdout
+						if error
+							console.log 'error', c._id, cmd1, cmd, error
+						#check if there is a file output
+						file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
+						#sending back the status
+						s_wc.send JSON.stringify(
+							id: c._id
+							stdout: stdout
+							error: error
+							status: 3
+							timeTaken: ~~((new Date).getTime() / 1000) - started
+							node:
+								name: os.hostname()
+								loadavg: os.loadavg()
+								freemem: os.freemem()
+								totamem: os.totalmem()
+							file: file_ret
+							_rev: c._rev
+							jobIds: jobs)
+						#one less job
+						jobs = jobs.filter (obj)->
+							return true if obj[0] isnt c._id
+						console.log 'job done', (c.exec.split("/").pop()).split(" ")[0], c._id, 'currently running', jobs.length
+						if error and error.code == 'Unknown system errno 7' and options.err7 # unrecoverable error..
+							#unrecoverable error
+							console.log 'Unrecoverable error 7'
+							process.exit 1
+						updateState()
+						return
 				return
 
 			#timed restart of job processing
