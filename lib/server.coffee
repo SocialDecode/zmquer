@@ -427,7 +427,7 @@ main = ->
 											->
 												getKeysCargo.push
 													limit: config.readKeySize
-													startkey: gb.rows[gb.rows.length - 1].key
+													startkey_docid: gb.rows[gb.rows.length - 1]._id
 													descending: 'true'
 												return
 										)(getbody)
