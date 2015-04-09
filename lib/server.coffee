@@ -378,6 +378,19 @@ main = ->
 			), config.delBatchsize)
 			
 
+			#Curry Document Key extraction
+			getKeysF = ->
+			if config.view?
+				getKeysF = (params,callback) ->
+					if config.view.params?
+						for k,v of config.view.params
+							unless params[k]?
+								params[k] = v
+					return couchque.view(config.view.designname, config.view.viewname, params, callback)
+			else
+				getKeysF = (params,callback)->
+					return couchque.list(params,callback)
+
 			# Cargo to gett all pending keys it auto updates when is drained
 			getKeysCargo = async.cargo(((tasks, callback) ->
 				if !r.ready or workque.length > maxquelen
@@ -388,7 +401,7 @@ main = ->
 				else
 					for task in tasks
 						console.time 'getting ' + task.limit + ' keys'
-						couchque.list task, (geterr, getbody) ->
+						getKeysF task, (geterr, getbody) ->
 							`var x`
 							if geterr
 								getKeysCargo.push tasks
