@@ -480,7 +480,12 @@ main = ->
 										doc._retries = workque[index]._retries if workque[index]._retries?
 										workque[index] = doc
 								else
-									console.log "invalid doc",item?.id
+									if item?.id?
+										# dropping invalid jobs (most probably a deleted job)
+										console.log "invalid doc",item.id
+										index = findplace(item.id)
+										workque[index].status = "dropped"
+
 						callback()
 			), config.readBatchsize)
 			syncJobs = (host, jobs) ->
