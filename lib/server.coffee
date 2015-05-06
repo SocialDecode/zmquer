@@ -442,7 +442,7 @@ main = ->
 				return
 			), 1)
 			getDocsCargo = async.cargo(((couch_toprocess, callback) ->
-				if !r.ready or os.freemem() < config.minMem * 1048576 or couchDelCargo.length() > config.delBatchsize or couchDelCargoWorking
+				if !r.ready or os.freemem() < config.minMem * 1048576
 					setImmediate ->
 						getDocsCargo.push couch_toprocess
 						return
