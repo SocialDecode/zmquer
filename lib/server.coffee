@@ -109,6 +109,7 @@ main = ->
 					jumpon++
 					status_c = {}
 					tokill = []
+					resentdocs = false
 					for act in workque
 						switch act._status
 							when "new"
@@ -147,6 +148,15 @@ main = ->
 								if act._otherhost?
 									status_c["duplicates"] ||= 0
 									status_c["duplicates"] += Object.keys(act._otherhost).length
+							when "fetching"
+								if getDocsCargo.length() is 0 and !getDocsCargo.running() and !resentdocs # nothing in the cargo.. but on the wue, re-queing ALL
+									resentdocs = true
+									console.log "No pending cargo for doc retrieval and current status is fetching..."
+									for item in workque
+										if item._status is "fetching"
+											item._status = "new"
+											item._lastchange = ~~((new Date).getTime() / 1000)
+
 						status_c[act._status] ||= 0
 						status_c[act._status]++
 					if tokill.length > 0
