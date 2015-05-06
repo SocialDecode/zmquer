@@ -147,6 +147,12 @@ main = ->
 								if act._otherhost?
 									status_c["duplicates"] ||= 0
 									status_c["duplicates"] += Object.keys(act._otherhost).length
+							when "fetching"
+								if getDocsCargo.length() is 0 and !getDocsCargo.running() # nothing in the cargo.. but on the wue, re-queing ALL
+									for item in workque
+										if item._status is "fetching"
+											item._status = "new"
+											item._lastchange = ~~((new Date).getTime() / 1000)
 
 						status_c[act._status] ||= 0
 						status_c[act._status]++
