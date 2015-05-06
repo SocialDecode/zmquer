@@ -462,7 +462,6 @@ main = ->
 							setImmediate ->
 								getDocsCargo.push couch_toprocess
 								return
-							callback()
 						else
 							for item in bulkbody.rows
 								if item?.doc?.exec?
@@ -485,7 +484,6 @@ main = ->
 										console.log "invalid doc",item.id
 										index = findplace(item.id)
 										workque[index].status = "dropped"
-
 						callback()
 			), config.readBatchsize)
 			syncJobs = (host, jobs) ->
