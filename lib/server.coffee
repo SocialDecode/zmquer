@@ -451,8 +451,7 @@ main = ->
 				if !r.ready or os.freemem() < config.minMem * 1048576
 					setImmediate ->
 						getDocsCargo.push couch_toprocess
-						return
-					callback()
+						callback()
 				else
 					keys = []
 					keys.push key for key in couch_toprocess
@@ -467,7 +466,7 @@ main = ->
 							console.log 'error while getting DB data', bulkerr
 							setImmediate ->
 								getDocsCargo.push couch_toprocess
-								return
+								callback()
 						else
 							for item in bulkbody.rows
 								if item?.doc?.exec?
@@ -490,7 +489,8 @@ main = ->
 										console.log "invalid doc",item.id
 										index = findplace(item.id)
 										workque[index].status = "dropped"
-						callback()
+								callback()
+						
 			), config.readBatchsize)
 			syncJobs = (host, jobs) ->
 				if host? and Array.isArray(jobs)
