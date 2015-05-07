@@ -492,7 +492,7 @@ main = ->
 										console.log "invalid doc",item.id
 										index = findplace(item.id)
 										workque[index].status = "dropped"
-								callback()
+							callback()
 						
 			), config.readBatchsize)
 			syncJobs = (host, jobs) ->
