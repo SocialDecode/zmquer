@@ -653,7 +653,8 @@ main = ->
 					#separating command from arguments
 					require('child_process').execFile cmd1, cmd, {
 						cwd: path
-						env: env
+						env: env,
+						timeout : options.cmdTimeoutMs
 					}, (error, stdout, stderr) ->
 						if c.env and fs.existsSync(filePath)
 							fs.unlinkSync filePath
