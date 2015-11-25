@@ -4,6 +4,6 @@
 	"basepath" : "",
 	"minMem" : 300,
 	"jsonpack" : false,
-	"memJob" : 50,
-	"maxLoad" : 7
+	"maxLoad" : 7,
+	"PPC" : 5
 }
