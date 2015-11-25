@@ -585,7 +585,7 @@ main = ->
 				startup: os.hostname()
 				jobsIds: jobs)
 			heathOk = ->
-				return jobs.length < ((os.cpus().length * options.PPC)+1)  and os.loadavg()[0] < options.maxLoad and os.freemem() < options.minMem * 1048576
+				return jobs.length < ((os.cpus().length * options.PPC)+1)  and os.loadavg()[0] < options.maxLoad and os.freemem() > options.minMem * 1048576
 			on_message = (msg) ->
 				#updateState()
 				#pingServer()
