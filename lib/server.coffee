@@ -53,7 +53,6 @@ main = ->
 		'DBSyncInterval': null
 		'initServer': ->
 			workque = []
-			maxquelen = 1000
 			jumpon = 0
 			lastcount = 
 				working: 0
@@ -410,7 +409,7 @@ main = ->
 
 			# Cargo to gett all pending keys it auto updates when is drained
 			getKeysCargo = async.cargo(((tasks, callback) ->
-				if !r.ready or workque.length > maxquelen
+				if !r.ready or lastcount.queue > (lastcount.working * 2)
 					setImmediate ->
 						getKeysCargo.push tasks
 						return
