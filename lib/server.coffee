@@ -150,6 +150,10 @@ main = ->
 								if act._otherhost?
 									status_c["duplicates"] ||= 0
 									status_c["duplicates"] += Object.keys(act._otherhost).length
+								#remove from working if no update from status has been seen in the last 5min
+								if act._lastseen? and ~~((new Date).getTime() / 1000) - act._lastseen > 300 
+									act._status = "tosend"
+									act._lastchange = ~~((new Date).getTime() / 1000)
 							when "fetching"
 								if getDocsCargo.length() is 0 and !getDocsCargo.running() and !resentdocs # nothing in the cargo.. but on the wue, re-queing ALL
 									resentdocs = true
@@ -535,6 +539,7 @@ main = ->
 									currentjob._takenby = host
 									currentjob._status = "working"
 									currentjob._lastchange = ~~((new Date).getTime() / 1000)
+									currentjob._lastseen = ~~((new Date).getTime() / 1000)
 									delete currentjob._otherhost?[host]
 							else # create a ghosth job
 								console.log "creating ghost job",jobId,"for", host
@@ -543,8 +548,11 @@ main = ->
 									_id : jobId,
 									_rev : jobRv,
 									_status : "working",
-									_lastchange : ~~((new Date).getTime() / 1000)
+									_lastchange : ~~((new Date).getTime() / 1000),
+									_lastseen = ~~((new Date).getTime() / 1000)
 								}
+						else
+							findinque(item)._lastseen = ~~((new Date).getTime() / 1000)
 
 					# Assigned jobs but not working
 					for item in assigned
@@ -560,6 +568,7 @@ main = ->
 							else # kill the ghost job
 								workque = workque.filter (obj)->
 									return obj._id isnt item
+
 					resyncQueue() if sendsync
 				return
 			return r
