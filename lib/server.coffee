@@ -55,6 +55,9 @@ main = ->
 			workque = []
 			maxquelen = 1000
 			jumpon = 0
+			lastcount = 
+				working: 0
+				queue: 0
 			findinque = (id)->
 				for obj,ix in workque
 					return workque[ix] if obj._id is id
@@ -186,6 +189,11 @@ main = ->
 						console.log "Resync of Queue", status_c.onqueue, s_wk._zmq.pending
 						resyncQueue()
 					updatingStatus = false
+
+					# Updating global status
+					lastcount = 
+						working : if status_c.working then status_c.working else 0
+						queue : if status_c.onqueue then status_c.onqueue else 0
 			statusTimer = setInterval updateStatus, 500
 			datalog = 
 				gauge: ->
@@ -451,7 +459,7 @@ main = ->
 				return
 			), 1)
 			getDocsCargo = async.cargo(((couch_toprocess, callback) ->
-				if !r.ready or os.freemem() < config.minMem * 1048576
+				if !r.ready or os.freemem() < config.minMem * 1048576 or lastcount.queue > (lastcount.working * 2)
 					setImmediate ->
 						getDocsCargo.push couch_toprocess
 						callback()
@@ -480,7 +488,7 @@ main = ->
 									if workque[index]._status is "fetching"
 										workque[index] = doc
 									else
-										#it was a gosth job
+										#it was a ghost job
 										console.log "updating info for ghost job", doc._id
 										doc._status = workque[index]._status
 										doc._takenby = workque[index]._takenby if workque[index]._takenby?
