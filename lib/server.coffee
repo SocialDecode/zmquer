@@ -549,7 +549,7 @@ main = ->
 									_rev : jobRv,
 									_status : "working",
 									_lastchange : ~~((new Date).getTime() / 1000),
-									_lastseen = ~~((new Date).getTime() / 1000)
+									_lastseen : ~~((new Date).getTime() / 1000)
 								}
 						else
 							findinque(item)._lastseen = ~~((new Date).getTime() / 1000)
