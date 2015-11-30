@@ -476,7 +476,7 @@ main = ->
 						include_docs: true
 					}, (bulkerr, bulkbody) ->
 						elapsed = process.hrtime(start)[1] / 1000000;
-						elapsed_getDocsCargo = (if process.hrtime(start)[0] > 0 then "#{process.hrtime(start)[0]}s" else "") + "#{elapsed.toFixed(0)}ms"
+						elapsed_getDocsCargo = (if process.hrtime(start)[0] > 0 then "#{process.hrtime(start)[0]}." else "0") + "#{elapsed.toFixed(0)}s"
 						#console.timeEnd label
 						if bulkerr
 							console.log 'error while getting DB data', bulkerr
@@ -502,7 +502,7 @@ main = ->
 								else
 									if item?.id?
 										# dropping invalid jobs (most probably a deleted job)
-										console.log "invalid doc",item.id
+										#console.log "invalid doc",item.id
 										index = findplace(item.id)
 										workque[index].status = "dropped"
 							callback()
