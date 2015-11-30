@@ -476,7 +476,7 @@ main = ->
 						include_docs: true
 					}, (bulkerr, bulkbody) ->
 						elapsed = process.hrtime(start)[1] / 1000000;
-						elapsed_getDocsCargo = (if process.hrtime(start)[0] > 0 then "#{process.hrtime(start)[0]}." else "0") + "#{elapsed.toFixed(0)}s"
+						elapsed_getDocsCargo = (if process.hrtime(start)[0] > 0 then "#{process.hrtime(start)[0]}." else "0.") + "#{elapsed.toFixed(0)}s"
 						#console.timeEnd label
 						if bulkerr
 							console.log 'error while getting DB data', bulkerr
