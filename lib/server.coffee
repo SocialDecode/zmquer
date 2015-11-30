@@ -67,6 +67,7 @@ main = ->
 				return -1
 			dirtyqueue = 0
 			workingSync = false
+			elapsed_getDocsCargo = ""
 			resyncQueue = ()->
 				if workingSync
 					return
@@ -173,11 +174,12 @@ main = ->
 					if jumpon % refreshrate is 0
 						output = []
 						for status,count of status_c
-							output.push "#{status} : #{count}"
+							output.push "#{status}:#{count}"
 						#console.log output.join(" | "), output.length,".--"
 						#process.stdout.clearLine()
-						output.push "zmq : " + s_wk._zmq.pending
-						output.push "mem : " + (if os.freemem() > (config.minMem * 1048576) then "Ok" else "notOk")
+						output.push "zmq:" + s_wk._zmq.pending
+						output.push "mem:" + (if os.freemem() > (config.minMem * 1048576) then "Ok" else "notOk")
+						output.push "fetchTime[#{config.readBatchsize}]:#{elapsed_getDocsCargo}"
 						if canprogress
 							process.stdout.cursorTo(60)
 							process.stdout.write output.join(" | ")
@@ -248,7 +250,7 @@ main = ->
 						datalog.legauges[key][slot]++
 					jobsDone = 0
 					for ix of datalog.legauges[key]
-						if now - parseInt(ix) > 300
+						if now - parseInt(ix) > 60
 							delete datalog.legauges[key][ix]
 						else
 							jobsDone += datalog.legauges[key][ix]
@@ -364,8 +366,8 @@ main = ->
 					callback()
 				else
 					couchDelCargoWorking = true
-					label = 'dropping ' + tasks.length + ' job(s)'
-					console.time label
+					#label = 'dropping ' + tasks.length + ' job(s)'
+					#console.time label
 					docs = []
 					for item in tasks
 						docs.push
@@ -374,7 +376,7 @@ main = ->
 							'_rev': item._rev
 					couchque.bulk { docs: docs }, (err, resp) ->
 						couchDelCargoWorking = false
-						console.timeEnd label
+						#console.timeEnd label
 						if err
 							console.log 'error while dropping..', err
 							setImmediate ->
@@ -469,13 +471,16 @@ main = ->
 				else
 					keys = []
 					keys.push key for key in couch_toprocess
-					label = 'getting ' + keys.length + ' docs'
-					console.time label
+					#label = 'fetching ' + keys.length + ' docs'
+					#console.time label
+					start = process.hrtime()
 					couchque.list {
 						keys: keys
 						include_docs: true
 					}, (bulkerr, bulkbody) ->
-						console.timeEnd label
+						elapsed = process.hrtime(start)[1] / 1000000;
+						elapsed_getDocsCargo = (if process.hrtime(start)[0] > 0 then "#{process.hrtime(start)[0]}s" else "") + "#{elapsed.toFixed(0)}ms"
+						#console.timeEnd label
 						if bulkerr
 							console.log 'error while getting DB data', bulkerr
 							setImmediate ->
