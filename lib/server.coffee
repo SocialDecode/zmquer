@@ -179,13 +179,13 @@ main = ->
 						#process.stdout.clearLine()
 						output.push "zmq:" + s_wk._zmq.pending
 						output.push "mem:" + (if os.freemem() > (config.minMem * 1048576) then "Ok" else "notOk")
-						output.push "fetchTime[#{config.readBatchsize}]:#{elapsed_getDocsCargo}"
+						output.push "fetch[#{config.readBatchsize}]:#{elapsed_getDocsCargo}"
 						if canprogress
 							process.stdout.cursorTo(60)
-							process.stdout.write output.join(" | ")
+							process.stdout.write output.join("•")
 							process.stdout.cursorTo(0)
 						else
-							console.log output.join(" | ")
+							console.log output.join("•")
 						jumpon = 0
 					
 					# Inconsistency checks for zmq queue
