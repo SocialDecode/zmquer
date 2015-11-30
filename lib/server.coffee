@@ -442,7 +442,6 @@ main = ->
 										setImmediate ->
 											getKeysCargo.push
 												limit: config.readKeySize
-												descending: 'true'
 											return
 									else
 										setImmediate ((gb) ->
@@ -450,14 +449,12 @@ main = ->
 												getKeysCargo.push
 													limit: config.readKeySize
 													startkey_docid: gb.rows[gb.rows.length - 1]._id
-													descending: 'true'
 												return
 										)(getbody)
 								else
 									setImmediate ->
 										getKeysCargo.push
 											limit: config.readKeySize
-											descending: 'true'
 										return
 							callback()
 							return
