@@ -14,6 +14,36 @@ catch err
 	canprogress = false
 	refreshrate = 5
 
+ddogevent = (datadogapikey,title, text, alert_type, tags = [], priority = "normal")->
+	post_data = JSON.stringify ({
+		title:title,
+		text:text,
+		priority:priority,
+		tags:tags,
+		alert_type:alert_type
+	})
+	post_req = require("https").request {
+			hostname: 'app.datadoghq.com',
+			port    : '443',
+			path    : "/api/v1/events?api_key=#{datadogapikey}",
+			method  : 'POST',
+			headers : {
+				'Content-Type': 'application/json',
+				'Cache-Control': 'no-cache',
+				'Content-Length': post_data.length
+			}
+		},(res)->
+			body = ''
+			res.on 'data', (chunk)->
+				body += chunk;
+			res.on 'end', ->
+				jsonresponse = JSON.parse(body)
+				console.log("Got a response: ", jsonresponse)
+	post_req.on 'error', (e)->
+		console.error "problem with ddog post: #{e.message}"
+	post_req.write(post_data)
+	post_req.end()
+
 main = ->
 	col = {}
 	couch_processing = {}
@@ -681,6 +711,8 @@ main = ->
 							console.log 'stdout', cmd, stdout
 						if error
 							console.log 'error', c._id, cmd1, cmd, error
+							cmdname = (c.exec.split("/").pop()).split(" ")[0]
+							ddogevent options.datadogapikey,"zmquer: #{os.hostname()}: #{cmdname}", c.error, "#{c._id} error", tags = ["host:#{os.hostname()}","cmd:#{cmd1}"], priority = "normal" if options.datadogapikey?
 						#check if there is a file output
 						file_ret = if fs.existsSync(env.TMPDIR + c._id + '_out.json') then fs.readFileSync(process.env.TMPDIR + c._id + '_out.json', 'utf8') else null
 						#sending back the status
