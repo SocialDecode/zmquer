@@ -36,11 +36,11 @@ ddogevent = (datadogapikey,title, text, alert_type, tags = [], priority = "norma
 			body = ''
 			res.on 'data', (chunk)->
 				body += chunk;
-			res.on 'end', ->
-				jsonresponse = JSON.parse(body)
-				console.log("Got a response: ", jsonresponse)
-	post_req.on 'error', (e)->
-		console.error "problem with ddog post: #{e.message}"
+			#res.on 'end', ->
+				#jsonresponse = JSON.parse(body)
+				#console.log("Got a response: ", jsonresponse)
+	#post_req.on 'error', (e)->
+	#	console.error "problem with ddog post: #{e.message}"
 	post_req.write(post_data)
 	post_req.end()
 
